@@ -1,0 +1,27 @@
+# Default values for mysql.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+#
+image:
+  repository: "mysql"
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+  replicas: 1
+  config:
+    username: "wordpress"
+    password: "abc123456xyz"
+    database: "wp_website"
+
+storage:
+  accessModes: "ReadWriteOnce"
+  storageClassName: "default"
+  resources: 1Gi
+
+# Only possible other option is "akv" to use Azure's Key Vault solution.
+secretProvider: {}
+
+service:
+  type: ClusterIP
+  port: 3306
+

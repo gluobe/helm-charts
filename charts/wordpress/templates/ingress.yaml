@@ -10,17 +10,6 @@ spec:
     - protocol: TCP
       port: 80
       name: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .Release.Name }}-mysql
-spec:
-  selector:
-    component: mysql
-  ports:
-    - protocol: TCP
-      port: 3306
 {{ if eq .Values.ingress true }}
 ---
 apiVersion: networking.k8s.io/v1beta1

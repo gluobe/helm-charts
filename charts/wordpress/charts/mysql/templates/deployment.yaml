@@ -3,10 +3,9 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-mysql
   labels:
-    app: wordpress
     component: mysql
 spec:
-  replicas: {{ .Values.database.replicas }}
+  replicas: {{ .Values.image.replicas }}
   selector:
     matchLabels:
       component: mysql
@@ -17,14 +16,15 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: "{{ .Values.database.image }}:{{ .Values.database.tag | default .Chart.AppVersion }}"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 3306
         env:
         - name: MYSQL_RANDOM_ROOT_PASSWORD
           value: "yes"
         - name: MYSQL_DATABASE
-          value: {{ .Values.database.config.database }}
+          value: {{ .Values.image.config.database }}
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:
@@ -62,5 +62,3 @@ spec:
             volumeAttributes:
               secretProviderClass: {{ .Values.secretProvider }}
 {{ end }}
-
-

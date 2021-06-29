@@ -12,22 +12,19 @@ provision:
   image: "ghcr.io/gluobe/wordpress-deploy"
   tag: "latest"
 
-imagePullSecrets: {}
-  #  name: ghcr
-  #  dockerconfigjson: "ey..."
+imageCredentials:
+  registry: ghcr.io
+  username: worldwideward
+  password: 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
+  email: ward@gluo.be
 
 secretProvider: {}
 
 storage:
   code:
     accessModes: "ReadWriteOnce"
-    storageClassName: "csi-hostpath-sc"
+    storageClassName: "default"
     resources: 1Gi
-  db:
-    accessModes: "ReadWriteOnce"
-    storageClassName: "csi-hostpath-sc"
-    resources: 1Gi
-
 
 nginx:
   image: "nginx"
@@ -45,12 +42,9 @@ php:
     username: "webmaster"
     password: "test"
 
-database: 
-  image: "mysql"
-  tag: "latest"
-  replicas: 1
-  config:
-    username: "wordpress"
-    password: "abc123456xyz"
-    database: "wp_website"
-
+mysql:
+  image:
+    config:
+      username: "wordpress"
+      password: "abc123456xyz"
+      database: "wp_website"
