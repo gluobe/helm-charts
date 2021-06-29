@@ -33,11 +33,17 @@ spec:
             secretKeyRef:
               name: git-deploy-key
               key: id_rsa
-{{ end }}
         - name: GIT_HOST
           value: {{ .Values.git_host }}
         - name: GIT_REPO
           value: {{ .Values.git_repo }}
+{{ else }}
+        env:
+        - name: GIT_HOST
+          value: {{ .Values.git_host }}
+        - name: GIT_REPO
+          value: {{ .Values.git_repo }}
+{{ end }}
       containers:
       - name: nginx
         image: "{{ .Values.nginx.image }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"

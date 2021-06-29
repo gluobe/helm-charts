@@ -12,11 +12,11 @@ provision:
   image: "ghcr.io/gluobe/wordpress-deploy"
   tag: "latest"
 
-imageCredentials:
-  registry: ghcr.io
-  username: worldwideward
-  password: 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
-  email: ward@gluo.be
+imageCredentials: {}
+#  registry: ghcr.io
+#  username: 
+#  password: 
+#  email: 
 
 secretProvider: {}
 
