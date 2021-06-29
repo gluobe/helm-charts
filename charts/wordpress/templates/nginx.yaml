@@ -16,10 +16,7 @@ spec:
         app: wordpress
         component: nginx
     spec:
-{{ if .Values.imagePullSecrets }}
-      imagePullSecrets:
-      - name: {{ .Values.imagePullSecrets.name }}
-{{ end }}
+      serviceAccountName: nginx-id
       initContainers:
       - name: provision-wordpress
         image: "{{ .Values.provision.image }}:{{ .Values.provision.tag | default .Chart.AppVersion }}"
@@ -71,7 +68,7 @@ spec:
 {{ end }}
         env:
         - name: DB_NAME
-          value: {{ .Values.database.config.database }}
+          value: {{ .Values.mysql.image.config.database }}
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -91,7 +88,7 @@ spec:
               key: password
 {{ end }}
         - name: DB_HOST
-          value: "{{ .Release.Name }}-mysql.{{ .Values.namespace }}"
+          value: "{{ .Release.Name }}-mysql"
         - name: AUTH_KEY
           valueFrom:
             secretKeyRef:
