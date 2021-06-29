@@ -1,0 +1,56 @@
+# Wordpress
+#
+hostname: "www.my.site"
+
+certificate: false
+ingress: false
+
+git_host: "github.com"
+git_repo: "username/website.git"
+
+provision:
+  image: "ghcr.io/gluobe/wordpress-deploy"
+  tag: "latest"
+
+imagePullSecrets: {}
+  #  name: ghcr
+  #  dockerconfigjson: "ey..."
+
+secretProvider: {}
+
+storage:
+  code:
+    accessModes: "ReadWriteOnce"
+    storageClassName: "csi-hostpath-sc"
+    resources: 1Gi
+  db:
+    accessModes: "ReadWriteOnce"
+    storageClassName: "csi-hostpath-sc"
+    resources: 1Gi
+
+
+nginx:
+  image: "nginx"
+  tag: "1.17.0"
+  replicas: 1
+
+php:
+  image: "wordpress"
+  tag: "5.7-fpm"
+  replicas: 1
+  admin:
+    firstname: "Web"
+    lastname: "Master"
+    email: "webmaster@gluo.be"
+    username: "webmaster"
+    password: "test"
+
+database: 
+  image: "mysql"
+  tag: "latest"
+  replicas: 1
+  config:
+    username: "wordpress"
+    password: "abc123456xyz"
+    database: "wp_website"
+

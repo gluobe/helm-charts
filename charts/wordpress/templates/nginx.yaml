@@ -1,0 +1,195 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    app: wordpress
+    component: nginx
+spec:
+  replicas: {{ .Values.nginx.replicas }}
+  selector:
+    matchLabels:
+      component: nginx
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        component: nginx
+    spec:
+{{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets.name }}
+{{ end }}
+      initContainers:
+      - name: provision-wordpress
+        image: "{{ .Values.provision.image }}:{{ .Values.provision.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: wordpress-data
+          mountPath: /srv
+{{ if .Values.secretProvider }}
+        - name: akv
+          mountPath: /mnt/secrets
+        env:
+        - name: ID_RSA
+          valueFrom:
+            secretKeyRef:
+              name: git-deploy-key
+              key: id_rsa
+{{ end }}
+        - name: GIT_HOST
+          value: {{ .Values.git_host }}
+        - name: GIT_REPO
+          value: {{ .Values.git_repo }}
+      containers:
+      - name: nginx
+        image: "{{ .Values.nginx.image }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: wordpress-data
+          mountPath: /var/www/html
+{{ if .Values.secretProvider }}
+        - name: akv
+          mountPath: /mnt/secrets
+{{ end }}
+      - name: php-fpm
+        image: "{{ .Values.php.image }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - name: wordpress-data
+          mountPath: /var/www/html
+{{ if .Values.secretProvider }}
+        - name: akv
+          mountPath: /mnt/secrets
+{{ end }}
+        env:
+        - name: DB_NAME
+          value: {{ .Values.database.config.database }}
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user
+              key: username
+{{ if .Values.secretProvider }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-password
+              key: password
+{{ else }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user
+              key: password
+{{ end }}
+        - name: DB_HOST
+          value: "{{ .Release.Name }}-mysql.{{ .Values.namespace }}"
+        - name: AUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: auth_key
+        - name: SECURE_AUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: secure_auth_key
+        - name: LOGGED_IN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: logged_in_key
+        - name: NONCE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: nonce_key
+        - name: AUTH_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: auth_salt
+        - name: SECURE_AUTH_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: secure_auth_salt
+        - name: LOGGED_IN_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: logged_in_salt
+        - name: NONCE_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-environment
+              key: nonce_salt
+      volumes:
+        - name: wordpress-data 
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-code
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: wordpress-provision-script
+          configMap:
+            name: wordpress-provision
+{{ if .Values.secretProvider }}
+        - name: akv
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProvider }}
+{{ end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+    upstream php {
+        server unix:/tmp/php-cgi.socket;
+        server 127.0.0.1:9000;
+    }
+    server {
+        server_name {{ .Values.hostname }};
+        root /var/www/html;
+        index index.php;
+
+        location = /favicon.ico {
+                log_not_found off;
+                access_log off;
+        }
+
+        location = /robots.txt {
+                allow all;
+                log_not_found off;
+                access_log off;
+        }
+
+        location / {
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        location ~ \.php$ {
+                include fastcgi_params;
+                fastcgi_intercept_errors on;
+                fastcgi_pass php;
+                fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+                expires max;
+                log_not_found off;
+        }
+    }

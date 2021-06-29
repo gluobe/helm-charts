@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mysql
+  labels:
+    app: wordpress
+    component: mysql
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      component: mysql
+  template:
+    metadata:
+      labels:
+        component: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: "{{ .Values.database.image }}:{{ .Values.database.tag | default .Chart.AppVersion }}"
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_RANDOM_ROOT_PASSWORD
+          value: "yes"
+        - name: MYSQL_DATABASE
+          value: {{ .Values.database.config.database }}
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user
+              key: username
+{{ if .Values.secretProvider }}
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-password
+              key: password
+{{ else }}
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user
+              key: password
+{{ end }}
+        volumeMounts:
+        - name: database
+          mountPath: /var/lib/mysql
+{{ if .Values.secretProvider }}
+        - name: akv
+          mountPath: /mnt/secrets
+{{ end }}
+      volumes:
+        - name: database
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-database
+{{ if .Values.secretProvider }}
+        - name: akv
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProvider }}
+{{ end }}
+
+

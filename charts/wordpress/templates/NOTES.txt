@@ -1,0 +1,1 @@
+The website is now live at {{ .Values.hostname }}

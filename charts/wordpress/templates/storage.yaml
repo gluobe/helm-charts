@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-code
+spec:
+  accessModes:
+    - {{ .Values.storage.code.accessModes }}
+  resources: 
+    requests: 
+      storage: {{ .Values.storage.code.resources }}
+  storageClassName: {{ .Values.storage.code.storageClassName }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-database
+spec:
+  accessModes:
+    - {{ .Values.storage.db.accessModes }}
+  resources: 
+    requests:
+      storage: {{ .Values.storage.db.resources }}
+  storageClassName: {{ .Values.storage.db.storageClassName }}
