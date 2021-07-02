@@ -3,6 +3,20 @@ entries:
   wordpress:
   - apiVersion: v2
     appVersion: 5.7.0
+    created: "2021-07-02T09:25:55.919112088Z"
+    dependencies:
+    - name: mysql
+      repository: ""
+      version: 0.1.0
+    description: A Helm chart to deploy a Wordpress website
+    digest: a31eab89f31213dfee842129b211df40187a17a9cf880b8c85feedd11db88416
+    name: wordpress
+    type: application
+    urls:
+    - https://github.com/gluobe/helm-charts/releases/download/wordpress-0.3.2/wordpress-0.3.2.tgz
+    version: 0.3.2
+  - apiVersion: v2
+    appVersion: 5.7.0
     created: "2021-06-29T17:27:41.844503365Z"
     dependencies:
     - name: mysql
@@ -39,4 +53,4 @@ entries:
     urls:
     - https://github.com/gluobe/helm-charts/releases/download/wordpress-0.2.0/wordpress-0.2.0.tgz
     version: 0.2.0
-generated: "2021-06-29T17:27:41.844515566Z"
+generated: "2021-07-02T09:25:55.919153691Z"
