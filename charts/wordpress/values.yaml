@@ -1,9 +1,20 @@
 # Wordpress
 #
-hostname: "www.my.site"
+hostname: "example.com"
 
 certificate: false
-ingress: false
+ingress:
+  enabled: false
+#  annotations: {}
+#  hosts:
+#  - host: example.com
+#    paths:
+#    - path: "/"
+#  tls: 
+#  - secretName: some-tls-secret
+#    hosts:
+#    - example.com
+
 
 git_host: "github.com"
 git_repo: "username/website.git"
