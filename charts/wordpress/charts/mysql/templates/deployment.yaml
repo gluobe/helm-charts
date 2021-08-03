@@ -28,12 +28,26 @@ spec:
       labels:
         component: mysql
     spec:
+{{ if .Values.provisioning.url }}
+      initContainers:
+      - name: provision-sql
+        image: curlimages/curl
+        workingDir: /tmp
+        args:
+        - "{{ .Values.provisioning.url }}"
+        - "-odump.sql"
+        volumeMounts:
+        - name: sqldump
+          mountPath: /tmp
+{{ end }}
       containers:
       - name: mysql
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 3306
+        args:
+        - "--verbose"
         env:
         - name: MYSQL_RANDOM_ROOT_PASSWORD
           value: "yes"
@@ -62,7 +76,10 @@ spec:
           mountPath: /var/lib/mysql
         - name: config
           mountPath: /etc/mysql/conf.d
-          #subPath: docker.cnf
+{{ if .Values.provisioning.url }}
+        - name: sqldump
+          mountPath: /docker-entrypoint-initdb.d
+{{ end }}
 {{ if .Values.secretProvider }}
         - name: akv
           mountPath: /mnt/secrets
@@ -74,6 +91,10 @@ spec:
         - name: config
           configMap:
             name: {{ .Release.Name }}-docker.cnf
+{{ if .Values.provisioning.url }}
+        - name: sqldump
+          emptyDir: {}
+{{ end }}
 {{ if .Values.secretProvider }}
         - name: akv
           csi:
